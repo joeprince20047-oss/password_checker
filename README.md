@@ -107,7 +107,7 @@ password-checker/
 To install directly from GitHub into any Python environment:
 
 ```bash
-pip install git+https://github.com/YOUR_USERNAME/password-checker.git
+pip install git+https://joeprince20047-oss.github.io/password_checker/.git
 ```
 
 Or build a standalone binary with PyInstaller:
