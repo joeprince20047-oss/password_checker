@@ -29,7 +29,7 @@ A lightweight, zero-dependency CLI tool that analyses password strength using en
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/password-checker.git
+git clone https://joeprince20047-oss.github.io/password_checker/.git
 cd password-checker
 ```
 
