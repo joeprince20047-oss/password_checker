@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Strength Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141416;
+    --surface2: #1c1c1f;
+    --border: #2a2a2e;
+    --border2: #3a3a3f;
+    --text: #e8e8ec;
+    --muted: #6b6b75;
+    --accent: #00ff88;
+    --red: #ff4757;
+    --amber: #ffa502;
+    --green: #00ff88;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3rem 1.25rem 4rem;
+  }
+
+  .container { width: 100%; max-width: 660px; }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .nav-brand {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .nav-links { display: flex; gap: 20px; }
+  .nav-links a {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.5s 0.1s ease forwards;
+  }
+  .hero-tag {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 20px; height: 1px;
+    background: var(--accent);
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 480px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 12px;
+    opacity: 0;
+  }
+  .card:nth-child(1) { animation: fadeUp 0.5s 0.2s ease forwards; }
+  .card:nth-child(2) { animation: fadeUp 0.5s 0.3s ease forwards; }
+  .card:nth-child(3) { animation: fadeUp 0.5s 0.4s ease forwards; }
+  .card:nth-child(4) { animation: fadeUp 0.5s 0.5s ease forwards; }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-label::before {
+    content: '//';
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* ── INPUT ── */
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .pw-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 14px;
+    color: var(--accent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px 48px 14px 36px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.08em;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,255,136,0.08);
+  }
+  input::placeholder { color: var(--muted); letter-spacing: 0; font-size: 13px; }
+
+  .toggle-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .toggle-btn:hover { color: var(--text); }
+
+  /* ── SCORE ── */
+  .score-empty {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .score-empty::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .score-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .score-label {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 800;
+    transition: color 0.3s;
+  }
+  .score-right { text-align: right; }
+  .score-num-big {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .score-denom {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .bar-track {
+    width: 100%;
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+    width: 0%;
+  }
+
+  /* ── METRICS ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+  .metric {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .metric-lbl {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .metric-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* ── VARIETY ── */
+  .variety-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .chip.pass { background: rgba(0,255,136,0.07); border-color: rgba(0,255,136,0.2); color: var(--green); }
+  .chip.fail { background: rgba(255,71,87,0.07);  border-color: rgba(255,71,87,0.2);  color: var(--red); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 1.1rem 0; }
+
+  /* ── WARNINGS ── */
+  .warnings { display: flex; flex-direction: column; gap: 7px; }
+  .warn-item {
+    font-size: 11px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .warn-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(255,71,87,0.12);
+    border: 1px solid rgba(255,71,87,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── ENTROPY ── */
+  .entropy-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .entropy-meta p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .entropy-val {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 800;
+    transition: color 0.3s;
+    text-align: right;
+    line-height: 1;
+  }
+  .entropy-val.low  { color: var(--red); }
+  .entropy-val.mid  { color: var(--amber); }
+  .entropy-val.high { color: var(--green); }
+  .entropy-sub {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .entropy-scale {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  .e-block {
+    flex: 1;
+    height: 5px;
+    border-radius: 2px;
+    background: var(--surface2);
+    transition: background 0.2s;
+  }
+  .e-block.lit.low  { background: var(--red); }
+  .e-block.lit.mid  { background: var(--amber); }
+  .e-block.lit.high { background: var(--green); }
+
+  .entropy-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ── TIPS ── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .tip-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    border-left: 2px solid var(--accent);
+  }
+  .tip-item strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp 0.5s 0.6s ease forwards;
+    line-height: 2;
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  footer a:hover { opacity: 1; }
+
+  .hidden { display: none !important; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .metrics { grid-template-columns: 1fr; }
+    .tips-grid { grid-template-columns: 1fr; }
+    nav .nav-links { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-brand">PWD//CHECK</div>
+    <div class="nav-links">
+      <a href="https://github.com/YOUR_USERNAME/password-checker" target="_blank">GitHub</a>
+      <a href="https://github.com/YOUR_USERNAME/password-checker/blob/main/password_checker.py" target="_blank">Source</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">security tool · v1.0</div>
+    <h1>Password<br><span>Strength</span> Checker</h1>
+    <p>Analyses entropy, character variety, common password detection and pattern analysis — all client-side, nothing is stored or transmitted.</p>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+
+    <!-- INPUT -->
+    <div class="card">
+      <div class="card-label">enter password</div>
+      <div class="input-wrap">
+        <span class="pw-prefix">$_</span>
+        <input type="password" id="pw" placeholder="type your password here…" oninput="analyze()" autocomplete="new-password" spellcheck="false">
+        <button class="toggle-btn" onclick="toggleVis()" aria-label="Toggle visibility">
+          <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCORE -->
+    <div class="card">
+      <div class="card-label">strength analysis</div>
+      <div id="score-empty" class="score-empty">Waiting for input…</div>
+      <div id="score-content" class="hidden">
+        <div class="score-top">
+          <div class="score-label" id="score-label">Weak</div>
+          <div class="score-right">
+            <div><span class="score-num-big" id="score-num">0</span><span class="score-denom"> / 100</span></div>
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-lbl">Length</div>
+            <div class="metric-val" id="m-length">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-lbl">Crack time (est.)</div>
+            <div class="metric-val" id="m-crack">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-lbl">Common password</div>
+            <div class="metric-val" id="m-common">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-lbl">Entropy</div>
+            <div class="metric-val" id="m-entropy">—</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-label" style="margin-bottom:10px;">character variety</div>
+        <div class="variety-row" id="variety-row"></div>
+        <div id="warnings-wrap" class="hidden">
+          <div class="divider"></div>
+          <div class="card-label" style="margin-bottom:10px;">warnings</div>
+          <div class="warnings" id="warnings"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENTROPY VIZ -->
+    <div class="card">
+      <div class="entropy-top">
+        <div class="entropy-meta">
+          <div class="card-label" style="margin-bottom:2px;">entropy score</div>
+          <p>higher bits = exponentially harder to crack</p>
+        </div>
+        <div>
+          <div class="entropy-val low" id="entropy-val">0</div>
+          <div class="entropy-sub">bits</div>
+        </div>
+      </div>
+      <div class="entropy-scale" id="entropy-scale"></div>
+      <div class="entropy-ticks">
+        <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100+</span>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="card">
+      <div class="card-label">tips for a strong password</div>
+      <div class="tips-grid">
+        <div class="tip-item"><strong>Use 16+ characters</strong>Length is the single biggest factor in entropy.</div>
+        <div class="tip-item"><strong>Mix character types</strong>Combine upper, lower, digits and symbols.</div>
+        <div class="tip-item"><strong>Avoid sequences</strong>No 123, abc, qwerty or keyboard walks.</div>
+        <div class="tip-item"><strong>Use a passphrase</strong>4 random words beat a short complex password.</div>
+      </div>
+    </div>
+
+  </div><!-- /cards -->
+
+  <footer>
+    Built with Python · Zero dependencies · Nothing stored or transmitted<br>
+    <a href="https://github.com/YOUR_USERNAME/password-checker" target="_blank">github.com/YOUR_USERNAME/password-checker</a>
+  </footer>
+
+</div><!-- /container -->
+
+<script>
+const COMMON = new Set(["password","123456","password123","12345678","qwerty","abc123","monkey","1234567","letmein","trustno1","dragon","baseball","iloveyou","master","sunshine","ashley","bailey","passw0rd","shadow","123123","654321","superman","qazwsx","michael","football"]);
+
+function toggleVis() {
+  const inp = document.getElementById('pw');
+  const icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+function checkLength(pw) {
+  const n = pw.length;
+  if (n >= 16) return { score: 30, note: n + ' chars — excellent' };
+  if (n >= 12) return { score: 25, note: n + ' chars — good' };
+  if (n >= 8)  return { score: 15, note: n + ' chars — acceptable' };
+  return { score: 0, note: n + ' chars — too short' };
+}
+
+function checkVariety(pw) {
+  return [
+    { label: 'lowercase', ok: /[a-z]/.test(pw), score: 10 },
+    { label: 'uppercase', ok: /[A-Z]/.test(pw), score: 10 },
+    { label: 'digits',    ok: /\d/.test(pw),     score: 10 },
+    { label: 'symbols',   ok: /[^a-zA-Z0-9]/.test(pw), score: 15 },
+  ];
+}
+
+function calcEntropy(pw) {
+  let pool = 0;
+  if (/[a-z]/.test(pw)) pool += 26;
+  if (/[A-Z]/.test(pw)) pool += 26;
+  if (/\d/.test(pw))    pool += 10;
+  if (/[^a-zA-Z0-9]/.test(pw)) pool += 32;
+  if (!pool) return { score: 0, bits: 0 };
+  const bits = Math.round(pw.length * Math.log2(pool));
+  const score = bits >= 80 ? 15 : bits >= 60 ? 10 : bits >= 40 ? 5 : 0;
+  return { score, bits };
+}
+
+function crackTime(bits) {
+  if (!bits) return '< 1 second';
+  const secs = Math.pow(2, bits) / 1e10;
+  if (secs < 1)          return '< 1 second';
+  if (secs < 60)         return Math.round(secs) + ' seconds';
+  if (secs < 3600)       return Math.round(secs / 60) + ' minutes';
+  if (secs < 86400)      return Math.round(secs / 3600) + ' hours';
+  if (secs < 2592000)    return Math.round(secs / 86400) + ' days';
+  if (secs < 31536000)   return Math.round(secs / 2592000) + ' months';
+  const yrs = secs / 31536000;
+  if (yrs < 1e6)  return Math.round(yrs).toLocaleString() + ' years';
+  if (yrs < 1e9)  return (yrs / 1e6).toFixed(1) + 'M years';
+  if (yrs < 1e12) return (yrs / 1e9).toFixed(1) + 'B years';
+  return 'heat death of universe';
+}
+
+function buildScale(bits, cls) {
+  const total = 24;
+  const lit = Math.min(total, Math.round((bits / 100) * total));
+  document.getElementById('entropy-scale').innerHTML =
+    Array.from({ length: total }, (_, i) =>
+      '<div class="e-block' + (i < lit ? ' lit ' + cls : '') + '"></div>'
+    ).join('');
+}
+
+function analyze() {
+  const pw = document.getElementById('pw').value;
+  const empty = !pw.length;
+  document.getElementById('score-empty').classList.toggle('hidden', !empty);
+  document.getElementById('score-content').classList.toggle('hidden', empty);
+
+  if (empty) {
+    document.getElementById('entropy-val').textContent = '0';
+    document.getElementById('entropy-val').className = 'entropy-val low';
+    buildScale(0, 'low');
+    return;
+  }
+
+  const len  = checkLength(pw);
+  const vari = checkVariety(pw);
+  const ent  = calcEntropy(pw);
+  const isCommon  = COMMON.has(pw.toLowerCase());
+  const hasRepeat = /(.)\1{2,}/.test(pw);
+  const hasSeq    = /(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)/i.test(pw);
+
+  const varScore = vari.reduce((a, c) => a + (c.ok ? c.score : 0), 0);
+  const total = Math.max(0, Math.min(100,
+    len.score + varScore + ent.score +
+    (isCommon ? -20 : 0) + (hasRepeat ? -10 : 0) + (hasSeq ? -10 : 0)
+  ));
+
+  let label, color, entCls;
+  if      (total >= 80) { label = 'Very Strong'; color = '#00ff88'; entCls = 'high'; }
+  else if (total >= 60) { label = 'Strong';      color = '#00e676'; entCls = 'high'; }
+  else if (total >= 40) { label = 'Medium';      color = '#ffa502'; entCls = 'mid';  }
+  else                  { label = 'Weak';        color = '#ff4757'; entCls = 'low';  }
+
+  document.getElementById('score-label').textContent = label;
+  document.getElementById('score-label').style.color = color;
+  document.getElementById('score-num').textContent = total;
+  const bar = document.getElementById('bar-fill');
+  bar.style.width = total + '%';
+  bar.style.background = color;
+
+  document.getElementById('m-length').textContent  = len.note;
+  document.getElementById('m-entropy').textContent = ent.bits + ' bits';
+  document.getElementById('m-crack').textContent   = crackTime(ent.bits);
+  const mc = document.getElementById('m-common');
+  mc.textContent  = isCommon ? 'Yes — avoid ✗' : 'No ✓';
+  mc.style.color  = isCommon ? 'var(--red)' : 'var(--green)';
+
+  document.getElementById('variety-row').innerHTML = vari.map(c =>
+    '<span class="chip ' + (c.ok ? 'pass' : 'fail') + '">' +
+    (c.ok ? '✓' : '✗') + ' ' + c.label + '</span>'
+  ).join('');
+
+  const warns = [];
+  if (hasRepeat) warns.push('Repeated characters detected (e.g. aaa, 111)');
+  if (hasSeq)    warns.push('Sequential characters detected (e.g. 123, abc)');
+  if (isCommon)  warns.push('Password found in common passwords list');
+  const ww = document.getElementById('warnings-wrap');
+  if (warns.length) {
+    ww.classList.remove('hidden');
+    document.getElementById('warnings').innerHTML = warns.map(w =>
+      '<div class="warn-item"><div class="warn-dot">!</div>' + w + '</div>'
+    ).join('');
+  } else {
+    ww.classList.add('hidden');
+  }
+
+  document.getElementById('entropy-val').textContent = ent.bits;
+  document.getElementById('entropy-val').className = 'entropy-val ' + entCls;
+  buildScale(ent.bits, entCls);
+}
+
+buildScale(0, 'low');
+</script>
+</body>
+</html>
