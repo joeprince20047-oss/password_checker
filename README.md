@@ -3,6 +3,8 @@
 A lightweight, zero-dependency CLI tool that analyses password strength using entropy calculation, character variety checks, common password detection, and pattern analysis — all in a single Python file.
 
 ---
+## OFFICIAL INTERNID
+INTERNID : `CITS3854`
 
 ## Features
 
@@ -127,7 +129,5 @@ pyinstaller --onefile password_checker.py
 - This tool is for **local auditing only** — do not pipe passwords through untrusted environments
 
 ---
-
-## License
-
-MIT — free to use, modify, and distribute.
+## Organization
+ Codtech IT Solutions Private Limited live at:`codtechitsolutions.com`
